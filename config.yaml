@@ -1,4 +1,4 @@
 alignment_dir: /vortexfs1/omics/alexander/halexander/gene-finder/tmp/gene_alignments 
 protein_dir: /vortexfs1/omics/alexander/lblum/tara_gene_finder/data/prodigal_proteins
 output_dir:  /vortexfs1/omics/alexander/halexander/gene-finder/tmp/results
-gene_list: genelist.txt
+gene_list: inputs/genelist.txt
