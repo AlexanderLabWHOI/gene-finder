@@ -26,7 +26,13 @@ hmmbuild:
 
 hmmsearch: 
     queue: compute
-    threads: 16
+    threads: 8
     mem: 4
     time: 120
+
+get_contig_hits:
+    queue: compute
+    threads: 1
+    mem: 1
+    time: 30
 

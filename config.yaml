@@ -1,4 +1,5 @@
-alignment_dir: /vortexfs1/omics/alexander/halexander/gene-finder/tmp/gene_alignments 
+alignment_dir: /vortexfs1/omics/alexander/lblum/tara_gene_finder/gene_alignments 
 protein_dir: /vortexfs1/omics/alexander/lblum/tara_gene_finder/data/prodigal_proteins
-output_dir:  /vortexfs1/omics/alexander/halexander/gene-finder/tmp/results
-gene_list: inputs/genelist.txt
+mag_dir: /vortexfs1/omics/alexander/lblum/tara_gene_finder/data/mags_nt
+output_dir:  /vortexfs1/omics/alexander/lblum/tara_gene_finder/results
+gene_list: inputs/genelist-test.txt  
