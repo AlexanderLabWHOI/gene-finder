@@ -11,6 +11,7 @@ from snakemake.exceptions import print_exception, WorkflowError
 #----SET VARIABLES----#
 PROTEIN_DIR = config['protein_dir']
 ALIGNMENT_DIR = config['alignment_dir']
+MAG_DIR = config['mag_dir']
 OUTPUT_DIR = config['output_dir']
 GENEFILE = config['gene_list']
 genelist = []
@@ -20,15 +21,18 @@ with open(GENEFILE, 'r') as f:
 
 SAMPLES = [os.path.basename(f).replace(".proteins.faa", "") for f in glob.glob(PROTEIN_DIR + "/*.proteins.faa")]
 
-
-
 #----RULES----#
+localrules: parse_hmmsearch
+
 rule all:
     input:
         hmmbuild =  expand('{base}/{gene}/gene_alignment_profile.hmm', base = ALIGNMENT_DIR, gene=genelist), 
-        hmmsearch = expand('{base}/{gene}/{sample}.hmmout', base = OUTPUT_DIR, gene = genelist, sample = SAMPLES ), 
-        hmmtable = expand('{base}/{gene}/{sample}.eval.tab', base = OUTPUT_DIR, gene = genelist, sample = SAMPLES ), 
-        hmm_allhits = expand('{base}/{gene}/{sample}.hits.faa', base = OUTPUT_DIR, gene = genelist, sample = SAMPLES ), 
+        hmmsearch = expand('{base}/hmm_results/{gene}/{sample}.hmmout', base = OUTPUT_DIR, gene = genelist, sample = SAMPLES ), 
+        hmmtable = expand('{base}/hmm_results/{gene}/{sample}.eval.tab', base = OUTPUT_DIR, gene = genelist, sample = SAMPLES ), 
+        hmm_allhits = expand('{base}/hmm_results/{gene}/{sample}.hits.faa', base = OUTPUT_DIR, gene = genelist, sample = SAMPLES ),
+        hmm_mags = expand("{base}/mag_results/{gene}.maghits.contigs.csv", base = OUTPUT_DIR, gene = genelist) 
+ 
+
 rule hmmbuild:
     input: alignment = ALIGNMENT_DIR + "/{gene}/gene_alignment.aln"
     output: hmm = ALIGNMENT_DIR + "/{gene}/gene_alignment_profile.hmm"
@@ -44,7 +48,7 @@ rule hmmsearch:
         proteins = PROTEIN_DIR + "/{sample}.proteins.faa", 
         hmm = ALIGNMENT_DIR + "/{gene}/gene_alignment_profile.hmm"
     output: 
-        hmmout = OUTPUT_DIR + "/{gene}/{sample}.hmmout", 
+        hmmout = OUTPUT_DIR + "/hmm_results/{gene}/{sample}.hmmout", 
     params:
         cpu = "--cpu 2"
     conda:
@@ -56,9 +60,9 @@ rule hmmsearch:
 
 rule parse_hmmsearch:
     input:
-        OUTPUT_DIR + "/{gene}/{sample}.hmmout"
+        OUTPUT_DIR + "/hmm_results/{gene}/{sample}.hmmout"
     output:
-        OUTPUT_DIR + "/{gene}/{sample}.eval.tab"
+        OUTPUT_DIR + "/hmm_results/{gene}/{sample}.eval.tab"
     conda:
         "envs/biopython.yaml"
     script:
@@ -66,13 +70,25 @@ rule parse_hmmsearch:
 
 rule get_contig_hits:
     input:
-        eval_tab = OUTPUT_DIR + "/{gene}/{sample}.eval.tab", 
+        eval_tab = OUTPUT_DIR + "/hmm_results/{gene}/{sample}.eval.tab", 
         proteins = PROTEIN_DIR + "/{sample}.proteins.faa",
     output:
-        OUTPUT_DIR + "/{gene}/{sample}.hits.faa"
+        OUTPUT_DIR + "/hmm_results/{gene}/{sample}.hits.faa"
     conda:
         "envs/seqtk.yaml"
     shell: 
         """
         cut -f1 {input.eval_tab} | seqtk subseq {input.proteins} - > {output}
+        """
+
+rule get_MAG_hits:
+    input:
+        genelist = OUTPUT_DIR + "/curated-gene-lists/{gene}.threshold.csv", 
+        magIDList = MAG_DIR + "/mag_fasta_headers.txt"
+    output:
+        maglist = OUTPUT_DIR + "/mag_results/{gene}.maghits.contigs.csv"
+    conda: "envs/biopython.yaml" 
+    shell: 
+        """
+        python scripts/mag-finder.py {input.genelist} {input.magIDList} {output.maglist}        
         """
