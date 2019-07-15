@@ -1,1 +1,11 @@
 nifH
+nifH_rnd2
+nirS
+nirS_rnd2
+narG
+narG_rnd2
+amoA
+amoA_rnd2
+nosZ
+nosZ_rnd2
+ureC
